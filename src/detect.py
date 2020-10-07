@@ -20,12 +20,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
-from dataset import ImageFolder
 from matplotlib.ticker import NullLocator
-from model import Darknet
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from utils import non_max_suppression, load_classes
+
+from src.utils import non_max_suppression, load_classes
+from src.dataset import ImageFolder
+from src.model import Darknet
 
 
 def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='../config/yolov3-kitti.cfg',

@@ -15,8 +15,10 @@ import torch
 from torch.utils.data import DataLoader
 
 from src.dataset import KITTI2D
+from src.dataset_allegro import AllegroDataset
 from src.model import Darknet
 from src.train_model import train_model
+from allegroai import DataView, Task
 
 warnings.filterwarnings("ignore")
 
@@ -25,10 +27,10 @@ def main(train_path="../data/train/images/",
          val_path="../data/train/images/",
          labels_path="../data/train/yolo_labels/",
          weights_path="../checkpoints/",
-         preload_weights_file="darknet53.conv.74",
+         preload_weights_file="best_weights_kitti.pth",
          output_path="../output",
          yolo_config_file="../config/yolov3-kitti.cfg",
-         fraction=1,
+         fraction=0.8,
          learning_rate=1e-3,
          weight_decay=1e-4,
          batch_size=2,
@@ -60,6 +62,15 @@ def main(train_path="../data/train/images/",
     
     """
 
+    # Load dataview
+    dataview = DataView()
+    dataview.add_query(dataset_name='Kitty 2D', version_name='training')
+    dataview.set_labels({
+        'Car': 0, 'Van': 1, 'Truck': 2, 'Pedestrian': 3, 'Person_sitting': 4, 'Cyclist': 5, 'Tram': 6, 'Misc': 7
+    })
+    train_list, validation_list = dataview.split_to_lists(ratio=[int(fraction*100), 100-int(fraction*100)])
+    print("Dataview split: training {} images, validation {} images".format(len(train_list), len(validation_list)))
+
     # Set up checkpoints path
     checkpoints_path = weights_path
 
@@ -83,9 +94,9 @@ def main(train_path="../data/train/images/",
     model.to(device)
     # print(model)
 
-    # Create datasets
-    train_dataset = KITTI2D(train_path, labels_path, fraction=fraction, train=True)
-    valid_dataset = KITTI2D(val_path, labels_path, fraction=fraction, train=False)
+    # create torch Datasets
+    train_dataset = AllegroDataset(train_list, train=True)
+    valid_dataset = AllegroDataset(validation_list, train=False)
 
     # Create dataloaders
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -128,4 +139,18 @@ def main(train_path="../data/train/images/",
 
 
 if __name__ == "__main__":
-    main()
+    kwargs = dict(
+        train_path="../data/train/images/",
+        val_path="../data/train/images/",
+        labels_path="../data/train/yolo_labels/",
+        weights_path="../checkpoints/",
+        preload_weights_file="best_weights_kitti.pth",
+        output_path="../output",
+        yolo_config_file="../config/yolov3-kitti.cfg",
+        fraction=0.8,
+        learning_rate=1e-3,
+        weight_decay=1e-4,
+        batch_size=2,
+        epochs=3,
+        freeze_struct=[False, 0])
+    main(**kwargs)
