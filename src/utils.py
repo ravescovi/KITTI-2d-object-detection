@@ -10,14 +10,11 @@ Sources:
 """
 
 from __future__ import division
+
 import math
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+import torch
 
 
 def weights_init_normal(m):
@@ -33,8 +30,8 @@ def weights_init_normal(m):
     elif classname.find("BatchNorm2d") != -1:
         torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
         torch.nn.init.constant_(m.bias.data, 0.0)
-        
-        
+
+
 def load_classes(path):
     """
         Loads class labels at path
@@ -181,7 +178,7 @@ def non_max_suppression(prediction, num_classes, conf_thres=0.5, nms_thres=0.4):
         if not image_pred.size(0):
             continue
         # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 5 : 5 + num_classes], 1, keepdim=True)
+        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)
         # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
         detections = torch.cat((image_pred[:, :5], class_conf.float(), class_pred.float()), 1)
         # Iterate through all predicted classes
@@ -217,17 +214,16 @@ def non_max_suppression(prediction, num_classes, conf_thres=0.5, nms_thres=0.4):
 
 
 def build_targets(
-    pred_boxes, 
-    pred_conf, 
-    pred_cls, 
-    target, 
-    anchors, 
-    num_anchors, 
-    num_classes, 
-    grid_size, 
-    ignore_thres, 
-    img_dim):
-    
+        pred_boxes,
+        pred_conf,
+        pred_cls,
+        target,
+        anchors,
+        num_anchors,
+        num_classes,
+        grid_size,
+        ignore_thres,
+        img_dim):
     """
         Build target anchors for yolo network
     """

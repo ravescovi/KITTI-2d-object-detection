@@ -7,23 +7,25 @@ Created on Wed Apr 17 21:34:58 2019
 
 from __future__ import division
 
-from .utils import non_max_suppression, bbox_iou_numpy, compute_ap
-import tqdm
-import numpy as np
-import torch
-from torch.autograd import Variable
 import gc
-import torch
 import os
 
-def train(model, 
-          device, 
-          optimizer, 
-          scheduler, 
-          train_dataloader, 
+import numpy as np
+import torch
+import tqdm
+from torch.autograd import Variable
+
+from .utils import non_max_suppression, bbox_iou_numpy, compute_ap
+
+
+def train(model,
+          device,
+          optimizer,
+          scheduler,
+          train_dataloader,
           csv_log_file,
           tensor_type=torch.cuda.FloatTensor,
-          update_gradient_samples = 16, 
+          update_gradient_samples=16,
           freeze_darknet=False):
     """
         Train a deep neural yolo network model for a single epoch 
@@ -41,10 +43,10 @@ def train(model,
             freeze_darknet (bool): If true freeze backbone
     
     """
-    
+
     model.train(True)
     scheduler.step()
-    
+
     if freeze_darknet:
         print("Frezezing backbone...")
         for i, (name, p) in enumerate(model.named_parameters()):
@@ -54,50 +56,49 @@ def train(model,
         for i, (name, p) in enumerate(model.named_parameters()):
             if int(name.split('.')[1]) < 75:  # if layer < 75
                 p.requires_grad = True
-                    
-   
+
     # set gradients to zero
     optimizer.zero_grad()
-    
+
     for i, (img_paths, images, labels) in enumerate(tqdm.tqdm(train_dataloader)):
         images = Variable(images.type(tensor_type))
         labels = Variable(labels.type(tensor_type), requires_grad=False)
-        
+
         # Calculate loss
         loss = model(images, labels)
-        
+
         # Backpropate
         loss.backward()
-        
+
         # Update gradients after some batches
-        if ((i + 1)%update_gradient_samples== 0) or (i + 1 == len(train_dataloader)):
+        if ((i + 1) % update_gradient_samples == 0) or (i + 1 == len(train_dataloader)):
             optimizer.step()
             optimizer.zero_grad()
-        
+
         # Clear variables from gpu, collect garbage and clear gpu cache memory
         del images, labels
         gc.collect()
         torch.cuda.empty_cache()
-        
+
         # Construct loss data
-        loss_data = "%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f"% (
-                model.losses["x"] ,
-                model.losses["y"] ,
-                model.losses["w"] ,
-                model.losses["h"] ,
-                model.losses["conf"] ,
-                model.losses["cls"] ,
-                loss.item(),
-                model.losses["recall"] ,
-                model.losses["precision"],
-            )
-        
+        loss_data = "%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f" % (
+            model.losses["x"],
+            model.losses["y"],
+            model.losses["w"],
+            model.losses["h"],
+            model.losses["conf"],
+            model.losses["cls"],
+            loss.item(),
+            model.losses["recall"],
+            model.losses["precision"],
+        )
+
         # Write batch_loss details to csv file
-        #writer = csv.writer(csv_log_file)
+        # writer = csv.writer(csv_log_file)
         csv_log_file.writerow(loss_data.split("\t"))
-        
+
     print(
-        "[Losses: x %f, y %f, w %f, h %f, conf %f, cls %f, total %f, recall: %.5f, precision: %.5f]"% (
+        "[Losses: x %f, y %f, w %f, h %f, conf %f, cls %f, total %f, recall: %.5f, precision: %.5f]" % (
             model.losses["x"],
             model.losses["y"],
             model.losses["w"],
@@ -109,28 +110,24 @@ def train(model,
             model.losses["precision"],
         )
     )
-    
+
     return model
 
 
-
-
-def validation(model, 
-          device, 
-          valid_dataloader, 
-          csv_log_file,
-          tensor_type=torch.cuda.FloatTensor,
-          num_classes = 8):
-    
+def validation(model,
+               device,
+               valid_dataloader,
+               csv_log_file,
+               tensor_type=torch.cuda.FloatTensor,
+               num_classes=8):
     # Set model to evaluation mode
     model.train(False)
     model.eval()
-    
+
     # Variables to store detections
     all_detections = []
     all_annotations = []
-    
-    
+
     for batch_i, (_, images, labels) in enumerate(tqdm.tqdm(valid_dataloader, desc="Detecting objects")):
 
         images = Variable(images.type(tensor_type))
@@ -138,7 +135,7 @@ def validation(model,
         with torch.no_grad():
             outputs = model(images)
             outputs = non_max_suppression(outputs, num_classes, conf_thres=0.8, nms_thres=0.4)
-            
+
         for output, annotations in zip(outputs, labels):
             all_detections.append([np.array([]) for _ in range(num_classes)])
             if output is not None:
@@ -171,7 +168,7 @@ def validation(model,
 
                 for label in range(num_classes):
                     all_annotations[-1][label] = annotation_boxes[annotation_labels == label, :]
-        
+
         # Clear variables from gpu, collect garbage and clear gpu cache memory
         del images, labels
         gc.collect()
@@ -230,81 +227,74 @@ def validation(model,
         # compute average precision
         average_precision = compute_ap(recall, precision)
         average_precisions[label] = average_precision
-    
+
     ap_list = []
     for c, ap in average_precisions.items():
         print(f"+ Class '{c}' - AP: {ap}")
         # Write ap details to csv file
         ap_list.append(ap)
-    
+
     mAP = np.mean(list(average_precisions.values()))
     ap_list.append(mAP)
     print(f"mAP: {mAP}")
 
-    #writer = csv.writer(csv_log_file)
+    # writer = csv.writer(csv_log_file)
     csv_log_file.writerow(ap_list)
-    
+
     return model, mAP
 
 
-def train_model(model, 
-          device, 
-          optimizer, 
-          scheduler, 
-          train_dataloader,
-          valid_dataloader,
-          csv_log_file_train,
-          csv_log_file_valid,
-          weights_path,
-          max_epochs = 10,
-          tensor_type=torch.cuda.FloatTensor,
-          update_gradient_samples = 16, 
-          freeze_darknet=False,
-          freeze_epoch = -1):
-    
+def train_model(model,
+                device,
+                optimizer,
+                scheduler,
+                train_dataloader,
+                valid_dataloader,
+                csv_log_file_train,
+                csv_log_file_valid,
+                weights_path,
+                max_epochs=10,
+                tensor_type=torch.cuda.FloatTensor,
+                update_gradient_samples=16,
+                freeze_darknet=False,
+                freeze_epoch=-1):
     best_mAP = 0.0
-    
+
     for i in range(0, max_epochs):
-        print("--------Epoch {}--------".format(i+1))
-        if (freeze_darknet and freeze_epoch != -1) and (i+1 >= freeze_epoch):
-            model = train(model, 
-                      device, 
-                      optimizer, 
-                      scheduler, 
-                      train_dataloader, 
-                      csv_log_file_train,
-                      tensor_type=torch.cuda.FloatTensor,
-                      update_gradient_samples = 16, 
-                      freeze_darknet=freeze_darknet)
+        print("--------Epoch {}--------".format(i + 1))
+        if (freeze_darknet and freeze_epoch != -1) and (i + 1 >= freeze_epoch):
+            model = train(model,
+                          device,
+                          optimizer,
+                          scheduler,
+                          train_dataloader,
+                          csv_log_file_train,
+                          tensor_type=torch.cuda.FloatTensor,
+                          update_gradient_samples=16,
+                          freeze_darknet=freeze_darknet)
         else:
-            model = train(model, 
-                      device, 
-                      optimizer, 
-                      scheduler, 
-                      train_dataloader, 
-                      csv_log_file_train,
-                      tensor_type=torch.cuda.FloatTensor,
-                      update_gradient_samples = 16, 
-                      freeze_darknet=False)
-                
-        
-        
-        model, mAP = validation(model, 
-            device, 
-            valid_dataloader, 
-            csv_log_file_valid,
-            tensor_type=torch.cuda.FloatTensor,
-            num_classes = 8)
-        
+            model = train(model,
+                          device,
+                          optimizer,
+                          scheduler,
+                          train_dataloader,
+                          csv_log_file_train,
+                          tensor_type=torch.cuda.FloatTensor,
+                          update_gradient_samples=16,
+                          freeze_darknet=False)
+
+        model, mAP = validation(model,
+                                device,
+                                valid_dataloader,
+                                csv_log_file_valid,
+                                tensor_type=torch.cuda.FloatTensor,
+                                num_classes=8)
+
         # save casual weights here
-        model.save_weights(os.path.join(weights_path, "weights_kitti-epoch-{}.pth".format(i+1)))
-        
+        model.save_weights(os.path.join(weights_path, "weights_kitti-epoch-{}.pth".format(i + 1)))
+
         # update mAP
         if mAP > best_mAP:
             best_mAP = mAP
             print("Saving best weights")
             model.save_weights(os.path.join(weights_path, "best_weights_kitti.pth"))
-    
-        
-    
-

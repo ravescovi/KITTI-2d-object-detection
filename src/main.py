@@ -7,14 +7,16 @@ Created on Sun Apr 14 16:33:09 2019
 
 from __future__ import division
 
-from src.model import Darknet
-from src.dataset import KITTI2D
+import csv
 import os
+import warnings
+
 import torch
 from torch.utils.data import DataLoader
+
+from src.dataset import KITTI2D
+from src.model import Darknet
 from src.train_model import train_model
-import csv
-import warnings
 
 warnings.filterwarnings("ignore")
 
