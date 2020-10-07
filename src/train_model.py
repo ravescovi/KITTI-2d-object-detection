@@ -7,7 +7,7 @@ Created on Wed Apr 17 21:34:58 2019
 
 from __future__ import division
 
-from utils import non_max_suppression, bbox_iou_numpy, compute_ap
+from .utils import non_max_suppression, bbox_iou_numpy, compute_ap
 import tqdm
 import numpy as np
 import torch
