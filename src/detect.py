@@ -29,8 +29,13 @@ from src.dataset import ImageFolder
 from src.model import Darknet
 
 
-def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='../config/yolov3-kitti.cfg',
-           class_path='../data/names.txt'):
+def detect(
+        kitti_weights='../checkpoints/best_weights_kitti.pth',
+        config_path='../config/yolov3-kitti.cfg',
+        class_path='../data/names.txt',
+        image_path='../data/samples/',
+        output_path='../output',
+):
     """
         Script to run inference on sample images. It will store all the inference results in /output directory (
         relative to repo root)
@@ -42,7 +47,7 @@ def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='.
             
     """
     cuda = torch.cuda.is_available()
-    os.makedirs('../output', exist_ok=True)
+    os.makedirs(output_path, exist_ok=True)
 
     # Set up model
     model = Darknet(config_path, img_size=416)
@@ -54,7 +59,7 @@ def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='.
 
     model.eval()  # Set in evaluation mode
 
-    dataloader = DataLoader(ImageFolder("../data/samples/", img_size=416),
+    dataloader = DataLoader(ImageFolder(image_path, img_size=416),
                             batch_size=2, shuffle=False, num_workers=0)
 
     classes = load_classes(class_path)  # Extracts class labels from file
@@ -145,7 +150,7 @@ def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='.
         plt.axis('off')
         plt.gca().xaxis.set_major_locator(NullLocator())
         plt.gca().yaxis.set_major_locator(NullLocator())
-        plt.savefig('./output/%d.png' % (img_i), bbox_inches='tight', pad_inches=0.0)
+        plt.savefig(os.path.join(output_path, '%d.png' % img_i), bbox_inches='tight', pad_inches=0.0)
         plt.close()
 
 
@@ -154,6 +159,8 @@ if __name__ == '__main__':
     kwargs = dict(
         kitti_weights='./checkpoints/best_weights_kitti.pth',
         config_path='./config/yolov3-kitti.cfg',
-        class_path='./data/names.txt'
+        class_path='./data/names.txt',
+        image_path='./data/samples/',
+        output_path='./output',
     )
     detect(**kwargs)
