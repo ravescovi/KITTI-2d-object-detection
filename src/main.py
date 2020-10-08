@@ -140,17 +140,17 @@ def main(train_path="../data/train/images/",
 
 if __name__ == "__main__":
     kwargs = dict(
-        train_path="../data/train/images/",
-        val_path="../data/train/images/",
-        labels_path="../data/train/yolo_labels/",
-        weights_path="../checkpoints/",
+        train_path="./data/train/images/",
+        val_path="./data/train/images/",
+        labels_path="./data/train/yolo_labels/",
+        weights_path="./checkpoints/",
         preload_weights_file="best_weights_kitti.pth",
-        output_path="../output",
-        yolo_config_file="../config/yolov3-kitti.cfg",
+        output_path="./output",
+        yolo_config_file="./config/yolov3-kitti.cfg",
         fraction=0.8,
         learning_rate=1e-3,
         weight_decay=1e-4,
         batch_size=2,
-        epochs=3,
+        epochs=30,
         freeze_struct=[False, 0])
     main(**kwargs)

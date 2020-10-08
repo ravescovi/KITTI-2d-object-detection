@@ -145,10 +145,15 @@ def detect(kitti_weights='../checkpoints/best_weights_kitti.pth', config_path='.
         plt.axis('off')
         plt.gca().xaxis.set_major_locator(NullLocator())
         plt.gca().yaxis.set_major_locator(NullLocator())
-        plt.savefig('../output/%d.png' % (img_i), bbox_inches='tight', pad_inches=0.0)
+        plt.savefig('./output/%d.png' % (img_i), bbox_inches='tight', pad_inches=0.0)
         plt.close()
 
 
 if __name__ == '__main__':
     torch.multiprocessing.freeze_support()
-    detect()
+    kwargs = dict(
+        kitti_weights='./checkpoints/best_weights_kitti.pth',
+        config_path='./config/yolov3-kitti.cfg',
+        class_path='./data/names.txt'
+    )
+    detect(**kwargs)
