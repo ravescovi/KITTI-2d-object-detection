@@ -64,7 +64,7 @@ def main(train_path="../data/train/images/",
 
     # Load dataview
     dataview = DataView()
-    dataview.add_query(dataset_name='Kitty 2D', version_name='training')
+    dataview.add_query(dataset_name='KITTI 2D', version_name='training')
     dataview.set_labels({
         'Car': 0, 'Van': 1, 'Truck': 2, 'Pedestrian': 3, 'Person_sitting': 4, 'Cyclist': 5, 'Tram': 6, 'Misc': 7
     })
