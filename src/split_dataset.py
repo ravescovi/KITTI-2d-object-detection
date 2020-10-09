@@ -16,4 +16,4 @@ for frame in validation_list:
 
 dataset = DatasetVersion.create_version(
     dataset_name='KITTI 2D', version_name='training and validation', parent_version_names=['training'])
-dataset.add_frames(train_list + validation_list)
+dataset.add_frames(train_list + validation_list, batch_size=100)

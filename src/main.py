@@ -19,6 +19,7 @@ from src.dataset_allegro import AllegroDataset
 from src.model import Darknet
 from src.train_model import train_model
 from allegroai import DataView, Task
+from allegroai.dataview import SingleFrame
 
 warnings.filterwarnings("ignore")
 
@@ -64,11 +65,21 @@ def main(train_path="../data/train/images/",
 
     # Load dataview
     dataview = DataView()
-    dataview.add_query(dataset_name='KITTI 2D', version_name='training')
+    dataview.add_query(
+        dataset_name='KITTI 2D', version_name='training and validation', roi_query=['training'])
     dataview.set_labels({
         'Car': 0, 'Van': 1, 'Truck': 2, 'Pedestrian': 3, 'Person_sitting': 4, 'Cyclist': 5, 'Tram': 6, 'Misc': 7
     })
-    train_list, validation_list = dataview.split_to_lists(ratio=[int(fraction*100), 100-int(fraction*100)])
+    train_list = dataview.to_list()
+
+    dataview = DataView('validation')
+    dataview.add_query(
+        dataset_name='KITTI 2D', version_name='training and validation', roi_query=['validation'])
+    dataview.set_labels({
+        'Car': 0, 'Van': 1, 'Truck': 2, 'Pedestrian': 3, 'Person_sitting': 4, 'Cyclist': 5, 'Tram': 6, 'Misc': 7
+    })
+    validation_list = dataview.to_list()
+
     print("Dataview split: training {} images, validation {} images".format(len(train_list), len(validation_list)))
 
     # Set up checkpoints path
@@ -139,6 +150,7 @@ def main(train_path="../data/train/images/",
 
 
 if __name__ == "__main__":
+    task = Task.init('example', 'training')
     kwargs = dict(
         train_path="./data/train/images/",
         val_path="./data/train/images/",

@@ -27,6 +27,7 @@ from torch.utils.data import DataLoader
 from src.utils import non_max_suppression, load_classes
 from src.dataset import ImageFolder
 from src.model import Darknet
+from allegroai import Task
 
 
 def detect(
@@ -155,6 +156,7 @@ def detect(
 
 
 if __name__ == '__main__':
+    task = Task.init(project_name='example', task_name='detect')
     torch.multiprocessing.freeze_support()
     kwargs = dict(
         kitti_weights='./checkpoints/best_weights_kitti.pth',
