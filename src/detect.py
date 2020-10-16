@@ -24,9 +24,9 @@ from matplotlib.ticker import NullLocator
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from src.utils import non_max_suppression, load_classes
-from src.dataset import ImageFolder
-from src.model import Darknet
+from utils import non_max_suppression, load_classes
+from dataset import ImageFolder
+from model import Darknet
 from allegroai import Task
 
 
@@ -156,13 +156,13 @@ def detect(
 
 
 if __name__ == '__main__':
-    task = Task.init(project_name='example', task_name='detect')
+    task = Task.init(project_name='rafdoesntknowthehomework', task_name='detect')
     torch.multiprocessing.freeze_support()
     kwargs = dict(
         kitti_weights='./checkpoints/best_weights_kitti.pth',
         config_path='./config/yolov3-kitti.cfg',
         class_path='./data/names.txt',
-        image_path='./data/samples/',
-        output_path='./output',
+        image_path='./data/sample2/',
+        output_path='./output2',
     )
     detect(**kwargs)
