@@ -156,13 +156,13 @@ def detect(
 
 
 if __name__ == '__main__':
-    task = Task.init(project_name='example', task_name='detect')
+    task = Task.init(project_name='rafdoesntknowthehomework', task_name='detect')
     torch.multiprocessing.freeze_support()
     kwargs = dict(
         kitti_weights='./checkpoints/best_weights_kitti.pth',
         config_path='./config/yolov3-kitti.cfg',
         class_path='./data/names.txt',
-        image_path='./data/samples/',
-        output_path='./output',
+        image_path='./data/sample2/',
+        output_path='./output2',
     )
     detect(**kwargs)
