@@ -15,7 +15,7 @@ import torch
 import tqdm
 from torch.autograd import Variable
 
-from .utils import non_max_suppression, bbox_iou_numpy, compute_ap
+from utils import non_max_suppression, bbox_iou_numpy, compute_ap
 
 
 def train(model,

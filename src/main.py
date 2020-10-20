@@ -14,10 +14,10 @@ import warnings
 import torch
 from torch.utils.data import DataLoader
 
-from src.dataset import KITTI2D
-from src.dataset_allegro import AllegroDataset
-from src.model import Darknet
-from src.train_model import train_model
+from dataset import KITTI2D
+from dataset_allegro import AllegroDataset
+from model import Darknet
+from train_model import train_model
 from allegroai import DataView, Task
 from allegroai.dataview import SingleFrame
 

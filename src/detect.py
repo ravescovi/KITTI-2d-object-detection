@@ -24,9 +24,9 @@ from matplotlib.ticker import NullLocator
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from src.utils import non_max_suppression, load_classes
-from src.dataset import ImageFolder
-from src.model import Darknet
+from utils import non_max_suppression, load_classes
+from dataset import ImageFolder
+from model import Darknet
 from allegroai import Task
 
 

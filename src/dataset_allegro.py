@@ -5,7 +5,7 @@ import torch
 
 from allegroai import SingleFrame
 
-from .dataset import KITTI2D
+from dataset import KITTI2D
 
 
 class AllegroDataset(KITTI2D):
